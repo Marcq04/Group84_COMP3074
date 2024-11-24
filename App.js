@@ -12,24 +12,10 @@ const Nov = createBottomTabNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
       <NavigationContainer>
         <Nov.Navigator>
-          <Nov.Screen name="Splash" component={SplashScreen} />
           <Nov.Screen name="Home" component={HomeScreen} />
-          <Nov.Screen name="About" component={AboutScreen} />
-          <Nov.Screen name="Restaurant" component={RestaurantScreen} />
         </Nov.Navigator>
       </NavigationContainer>
-    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
