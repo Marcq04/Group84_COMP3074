@@ -16,12 +16,12 @@ export default function HomeScreen({navigation}) {
             <Text style={styles.text}>Home Screen</Text>
             <Button title="About Us" onPress={() => navigation.navigate('About')} />
             {/* Implement a list view of restaurants */}
-            <View style={styles.container}>
+            <View style={styles.listViewContainer}>
                 <Text style={styles.text}>Restaurants Visited</Text>
                 <FlatList
                     data={restaurantData}
                     renderItem={({ item }) => (
-                        <View>
+                        <View style={styles.listItem}>
                             <Text>{item.name}</Text>
                             <Text>Rating: {item.rating} ⭐</Text>
                             <Text>Location: {item.location}</Text>
@@ -46,5 +46,15 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,
-    }
+    },
+    listViewContainer: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: 'black',
+    },
+    listItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: 'gray',
+    },
   });
