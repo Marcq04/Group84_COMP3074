@@ -15,6 +15,7 @@ export default function App() {
       <NavigationContainer>
         <Nov.Navigator>
           <Nov.Screen name="Home" component={HomeScreen} />
+          <Nov.Screen name="About" component={AboutScreen} />
         </Nov.Navigator>
       </NavigationContainer>
   );

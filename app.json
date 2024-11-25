@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "group84",
     "name": "group84prototype",
     "slug": "group84prototype",
     "version": "1.0.0",
@@ -19,10 +20,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.marcq04.group84prototype"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0a6fb8fa-a245-42dc-a50f-d186fe0283bb"
+      }
     }
   }
 }
