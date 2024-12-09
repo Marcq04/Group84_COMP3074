@@ -1,98 +1,158 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, FlatList, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Button, FlatList, TextInput, Alert, TouchableOpacity } from 'react-native';
 
-// Dummy data
-const initialRestaurantData = [
-    { id: '1', name: 'The Gourmet Kitchen', rating: 4.5, location: 'Downtown' },
-    { id: '2', name: 'Pasta Palace', rating: 4.0, location: 'Uptown' },
-    { id: '3', name: 'Burger Haven', rating: 3.8, location: 'Midtown' },
-    { id: '4', name: 'Sushi World', rating: 4.7, location: 'Eastside' },
-    { id: '5', name: 'Steakhouse Deluxe', rating: 4.3, location: 'Westside' },
-];
+const API_KEY = 'AIzaSyBuJ3VdK5xAJkB0Y0RDW3RbGewkOMbe-yI';
 
 export default function HomeScreen({ navigation }) {
-    const [restaurants, setRestaurants] = useState(initialRestaurantData);
-    const [restaurantName, setRestaurantName] = useState('');
-    const [restaurantLocation, setRestaurantLocation] = useState('');
-    const [restaurantRating, setRestaurantRating] = useState('');
+    const [foundRestaurants, setFoundRestaurants] = useState([]);
+    const [savedRestaurants, setSavedRestaurants] = useState([]);
+    const [searchName, setSearchName] = useState('');
+    const [editingRestaurantId, setEditingRestaurantId] = useState(null);
+    const [tempName, setTempName] = useState('');
+    const [tempRating, setTempRating] = useState('');
 
-    // Function to add a new restaurant
-    const addRestaurant = () => {
-        if (restaurantName && restaurantLocation && restaurantRating) {
-            const newRestaurant = {
-                id: (restaurants.length + 1).toString(),
-                name: restaurantName,
-                rating: parseFloat(restaurantRating),
-                location: restaurantLocation,
-            };
+    const searchRestaurants = () => {
+        if (searchName.trim() === '') {
+            Alert.alert('Error', 'Please enter a restaurant name.');
+            return;
+        }
 
-            setRestaurants((prevRestaurants) => [...prevRestaurants, newRestaurant]);
+        fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${searchName}&key=${API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                const results = data.results;
+                const newRestaurants = results.map(result => ({
+                    id: result.place_id,
+                    name: result.name,
+                    rating: result.rating || 'No rating available',
+                    location: result.formatted_address || 'No address available',
+                }));
+                setFoundRestaurants(newRestaurants);
+            })
+            .catch(error => {
+                console.error(error);
+                Alert.alert('Error', 'Failed to fetch restaurants. Please try again.');
+            });
+    };
 
-            // Clear input fields after adding
-            setRestaurantName('');
-            setRestaurantLocation('');
-            setRestaurantRating('');
+    const saveRestaurant = (restaurant) => {
+        if (savedRestaurants.find(r => r.id === restaurant.id)) {
+            Alert.alert('Info', 'This restaurant is already saved.');
         } else {
-            alert('Please fill in all fields');
+            setSavedRestaurants([...savedRestaurants, restaurant]);
+            Alert.alert('Success', `${restaurant.name} has been added to your saved restaurants.`);
         }
     };
 
-    // Function to remove a restaurant by id
-    const removeRestaurant = (id) => {
-        setRestaurants((prevRestaurants) =>
-            prevRestaurants.filter((restaurant) => restaurant.id !== id)
+    const deleteRestaurant = (restaurantId) => {
+        setSavedRestaurants(savedRestaurants.filter(r => r.id !== restaurantId));
+        Alert.alert('Success', 'Restaurant has been removed from your saved list.');
+    };
+
+    const startEditingRestaurant = (restaurant) => {
+        setEditingRestaurantId(restaurant.id);
+        setTempName(restaurant.name);
+        setTempRating(restaurant.rating.toString());
+    };
+
+    const confirmEditRestaurant = () => {
+        const updatedRestaurants = savedRestaurants.map(r =>
+            r.id === editingRestaurantId
+                ? { ...r, name: tempName, rating: tempRating }
+                : r
         );
+        setSavedRestaurants(updatedRestaurants);
+        setEditingRestaurantId(null);
+        setTempName('');
+        setTempRating('');
+        Alert.alert('Success', 'Restaurant details updated.');
+    };
+
+    const viewRestaurant = (restaurant) => {
+        navigation.navigate('Restaurant', { restaurant });
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.text}>Home Screen</Text>
-            <Button title="About Us" onPress={() => navigation.navigate('About')} />
+            <Text style={styles.text}>Restaurant Finder</Text>
 
-            {/* Input fields for adding a new restaurant */}
-            <View style={styles.addRestaurantContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Restaurant Name"
-                    value={restaurantName}
-                    onChangeText={setRestaurantName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Location"
-                    value={restaurantLocation}
-                    onChangeText={setRestaurantLocation}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Rating (0-5)"
-                    value={restaurantRating}
-                    keyboardType="numeric"
-                    onChangeText={setRestaurantRating}
-                />
-                <Button title="Add Restaurant" onPress={addRestaurant} />
-            </View>
+            <TextInput
+                style={styles.input}
+                placeholder="Enter restaurant name"
+                value={searchName}
+                onChangeText={setSearchName}
+            />
+            <Button title="Search" onPress={searchRestaurants} />
 
-            {/* List View of Restaurants */}
             <View style={styles.listViewContainer}>
-                <Text style={styles.text}>Restaurants Visited</Text>
+                <Text style={styles.text}>Restaurants Found</Text>
                 <FlatList
-                    data={restaurants}
+                    data={foundRestaurants}
                     renderItem={({ item }) => (
                         <View style={styles.listItem}>
-                            <Text>{item.name}</Text>
+                            <Text style={styles.listTitle}>{item.name}</Text>
                             <Text>Rating: {item.rating} ⭐</Text>
                             <Text>Location: {item.location}</Text>
                             <Button
-                                title="Visit"
-                                onPress={() => navigation.navigate('Restaurant', { restaurant: item })}
+                                title="Save"
+                                onPress={() => saveRestaurant(item)}
                             />
-                            <Button title="Remove" onPress={() => removeRestaurant(item.id)} />
+                            <TouchableOpacity style={styles.viewButton} onPress={() => viewRestaurant(item)}>
+                                <Text style={styles.viewButtonText}>View</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
                     keyExtractor={(item) => item.id}
                 />
             </View>
+
+            <View style={styles.border} />
+
+            <View style={styles.listViewContainer}>
+                <Text style={styles.text}>Saved Restaurants</Text>
+                <FlatList
+                    data={savedRestaurants}
+                    renderItem={({ item }) => (
+                        <View style={styles.listItem}>
+                            {editingRestaurantId === item.id ? (
+                                <>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={tempName}
+                                        onChangeText={setTempName}
+                                    />
+                                    <TextInput
+                                        style={styles.input}
+                                        value={tempRating}
+                                        onChangeText={setTempRating}
+                                        keyboardType="numeric"
+                                    />
+                                    <Button title="Confirm" onPress={confirmEditRestaurant} />
+                                </>
+                            ) : (
+                                <>
+                                    <Text style={styles.listTitle}>{item.name}</Text>
+                                    <Text>Rating: {item.rating} ⭐</Text>
+                                    <Text>Location: {item.location}</Text>
+                                    <Button
+                                        title="Edit"
+                                        onPress={() => startEditingRestaurant(item)}
+                                    />
+                                    <Button
+                                        title="Delete"
+                                        onPress={() => deleteRestaurant(item.id)}
+                                    />
+                                    <TouchableOpacity style={styles.viewButton} onPress={() => viewRestaurant(item)}>
+                                        <Text style={styles.viewButtonText}>View</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
+                    )}
+                    keyExtractor={(item) => item.id}
+                />
+            </View>
+            <Button title="About Us" onPress={() => navigation.navigate('About')} />
         </View>
     );
 }
@@ -106,14 +166,9 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     text: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    addRestaurantContainer: {
-        width: '100%',
-        marginBottom: 20,
-        padding: 10,
+        marginVertical: 10,
     },
     input: {
         width: '100%',
@@ -126,14 +181,30 @@ const styles = StyleSheet.create({
     listViewContainer: {
         flex: 1,
         width: '100%',
-        borderWidth: 1,
-        borderColor: 'black',
-        padding: 10,
+        marginTop: 20,
     },
     listItem: {
         padding: 10,
         borderBottomWidth: 1,
-        borderBottomColor: 'gray',
-        marginBottom: 10,
+        borderBottomColor: '#ccc',
     },
-  });
+    listTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    border: {
+        width: '100%',
+        height: 1,
+        backgroundColor: '#ccc',
+    },
+    viewButton: {
+        backgroundColor: '#007aff',
+        padding: 10,
+        borderRadius: 5,
+    },
+    viewButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+});
+
