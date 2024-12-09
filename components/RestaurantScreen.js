@@ -20,7 +20,7 @@ const RestaurantScreen = ({ route, navigation }) => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch restaurant details using the Google Places Details API
+  
   useEffect(() => {
     fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?place_id=${restaurant.id}&key=${API_KEY}`
@@ -40,7 +40,7 @@ const RestaurantScreen = ({ route, navigation }) => {
         setLoading(false);
       });
 
-    // Get user's current location
+    
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -55,7 +55,7 @@ const RestaurantScreen = ({ route, navigation }) => {
     })();
   }, [restaurant.id]);
 
-  // Handle sharing via email
+ 
   const handleShare = () => {
     const subject = encodeURIComponent('Restaurant Review');
     const body = encodeURIComponent(
@@ -114,7 +114,7 @@ const RestaurantScreen = ({ route, navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Restaurant Details */}
+  
       <Text style={styles.title}>{restaurantDetails.name}</Text>
       <Text style={styles.subtitle}>
         Rating: {restaurantDetails.rating || 'No rating available'} ⭐
@@ -127,7 +127,7 @@ const RestaurantScreen = ({ route, navigation }) => {
         Description: {restaurantDetails.vicinity || 'No description available'}
       </Text>
 
-      {/* Map View */}
+    
       <MapView
         style={styles.map}
         initialRegion={{
@@ -146,7 +146,7 @@ const RestaurantScreen = ({ route, navigation }) => {
         />
       </MapView>
 
-      {/* Buttons for actions */}
+     
       <Button title="View Full-Screen Map" onPress={handleGetDirections} />
       <Button title="Get Directions" onPress={handleGetDirections} />
       <Button title="Share via Email" onPress={handleShare} />
